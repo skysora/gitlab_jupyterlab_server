@@ -1,0 +1,36 @@
+version: "3.6"
+services:
+  gitlab:
+    image: gitlab/gitlab-ce:latest
+    restart: always
+    privileged: true
+    ports:
+      - '10080:80'
+      - '443:443'
+      - '10022:22'
+    volumes:
+      - ./gitlab/config:/etc/gitlab
+      - ./gitlab/logs:/var/log/gitlab
+      - ./gitlab/data:/var/opt/gitlab
+  gpu-jupyter:
+        build: ./gpu-jupyter/.build
+        deploy:
+          resources:
+            reservations:
+              devices:
+                - capabilities:
+                  - gpu
+        ports:
+          - 8848:8888
+        volumes:
+          - ./data:/home/jovyan/work
+        environment:
+          GRANT_SUDO: "yes"
+          JUPYTER_ENABLE_LAB: "yes"
+          NB_UID: ${JUPYTER_UID:-1000}
+          NB_GID: ${JUPYTER_GID:-1000}
+        # enable sudo permissions
+        user:
+          "root"
+        restart: always
+  
